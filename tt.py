@@ -13,7 +13,7 @@ def check_spy_monday_strategy():
     """
 
     # Prüfe ob Montag ist (Wochentag 0)
-    if datetime.today().weekday() != 1:
+    if datetime.today().weekday() != 0:
         print("Heute ist nicht Montag. Die Strategie wird nur Montags ausgeführt.")
         return
 
