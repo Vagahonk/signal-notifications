@@ -5,15 +5,41 @@ from datetime import datetime, timedelta
 import asyncio
 from telegram import Bot
 
-TOKEN = "8206293301:AAF6bg9TfesbodsfpFC6Z4Ce5sOhLCgyBPU"
-CHAT_ID = "1460988872"
+# --- Configuration ---
+# TOKEN = "8206293301:AAF6bg9TfesbodsfpFC6Z4Ce5sOhLCgyBPU"
+# CHAT_ID = "1460988872"
+# IMPORTANT: Your credentials should be set as environment variables for security.
+# On Windows (Command Prompt):
+# set TELEGRAM_BOT_TOKEN=your_token_here
+# set TELEGRAM_CHAT_ID=your_chat_id_here
+#
+# On Windows (PowerShell):
+# $env:TELEGRAM_BOT_TOKEN="your_token_here"
+# $env:TELEGRAM_CHAT_ID="your_chat_id_here"
+#
+# On Linux/macOS:
+# export TELEGRAM_BOT_TOKEN='your_token_here'
+# export TELEGRAM_CHAT_ID='your_chat_id_here'
 
-bot = Bot(token=TOKEN)
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 
-async def send_telegram_message(text):
-    """Sendet eine Nachricht an Telegram."""
-    await bot.send_message(chat_id=CHAT_ID, text=text)
+def send_telegram_message(text):
+    """Sends a message via Telegram if the library is enabled and configured."""
+    if not TELEGRAM_ENABLED:
+        print("Telegram notifications are disabled. Skipping.")
+        return
+    if not TOKEN or not CHAT_ID:
+        print("Telegram TOKEN or CHAT_ID not set in environment variables. Skipping notification.")
+        return
+
+    try:
+        bot = Bot(token=TOKEN)
+        bot.send_message(chat_id=CHAT_ID, text=text)
+        print("Telegram notification sent successfully.")
+    except Exception as e:
+        print(f"Failed to send Telegram notification: {e}")
 
 
 def check_spy_monday_strategy():
