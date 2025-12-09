@@ -29,15 +29,17 @@ async def send_telegram_message(text):
 
 def perform_strategy_check():
     """
-    Führt die Hauptstrategieprüfung durch, generiert eine einzige Nachricht
-    und sendet diese an die Konsole und Telegram.
+    Führt die Hauptstrategieprüfung durch, sammelt alle Fehler oder eine Erfolgsnachricht
+    und sendet am Ende eine einzige, zusammenfassende Benachrichtigung an Telegram.
     """
+    errors = []
+    message_lines = []
     percentage_diff = None
     last_pcr_value = None
     last_pcr_date = None
     prev_pcr_value = None
     prev_pcr_date = None
-    message_lines = []
+    last_roc = None
 
     # Schritt 1: PCR-Analyse durchführen
     try:
@@ -49,93 +51,77 @@ def perform_strategy_check():
         pcr_df['Date'] = pcr_df['Date'].astype(str)
 
         if len(pcr_df) < 200:
-            message = f"Nicht genügend Daten von der URL für SMA(200). Benötigt: 200, Vorhanden: {len(pcr_df)}. Strategie wird nicht ausgeführt."
-            print(message)
-            asyncio.run(send_telegram_message(message))
-            return
+            errors.append(f"Nicht genügend Daten von der URL für SMA(200). Benötigt: 200, Vorhanden: {len(pcr_df)}.")
+        else:
+            pcr_df['SMA2'] = pcr_df['Value'].rolling(window=2).mean()
+            pcr_df['SMA200'] = pcr_df['Value'].rolling(window=200).mean()
+            last_sma2 = pcr_df['SMA2'].iloc[-1]
+            last_sma200 = pcr_df['SMA200'].iloc[-1]
 
-        pcr_df['SMA2'] = pcr_df['Value'].rolling(window=2).mean()
-        pcr_df['SMA200'] = pcr_df['Value'].rolling(window=200).mean()
-        last_sma2 = pcr_df['SMA2'].iloc[-1]
-        last_sma200 = pcr_df['SMA200'].iloc[-1]
+            if last_sma200 == 0:
+                errors.append("SMA200 ist Null, eine Division ist nicht möglich.")
+            else:
+                ratio = last_sma2 / last_sma200
+                percentage_diff = (ratio - 1) * 100
 
-        if last_sma200 == 0:
-            message = "FEHLER: SMA200 ist Null, eine Division ist nicht möglich."
-            print(message)
-            asyncio.run(send_telegram_message(message))
-            return
+                last_pcr_value = pcr_df['Value'].iloc[-1]
+                last_pcr_date_str = pcr_df['Date'].iloc[-1]
+                last_pcr_date = datetime.strptime(
+                    last_pcr_date_str, '%Y%m%d').strftime('%d.%m.%Y')
 
-        ratio = last_sma2 / last_sma200
-        percentage_diff = (ratio - 1) * 100
-
-        last_pcr_value = pcr_df['Value'].iloc[-1]
-        last_pcr_date_str = pcr_df['Date'].iloc[-1]
-        last_pcr_date = datetime.strptime(
-            last_pcr_date_str, '%Y%m%d').strftime('%d.%m.%Y')
-
-        prev_pcr_value = pcr_df['Value'].iloc[-2]
-        prev_pcr_date_str = pcr_df['Date'].iloc[-2]
-        prev_pcr_date = datetime.strptime(
-            prev_pcr_date_str, '%Y%m%d').strftime('%d.%m.%Y')
+                prev_pcr_value = pcr_df['Value'].iloc[-2]
+                prev_pcr_date_str = pcr_df['Date'].iloc[-2]
+                prev_pcr_date = datetime.strptime(
+                    prev_pcr_date_str, '%Y%m%d').strftime('%d.%m.%Y')
 
     except requests.exceptions.RequestException as e:
-        message = f"FEHLER beim Abrufen der PCR-Daten von der URL: {e}"
-        print(message)
-        asyncio.run(send_telegram_message(message))
-        return
+        errors.append(f"FEHLER beim Abrufen der PCR-Daten von der URL: {e}")
     except Exception as e:
-        message = f"FEHLER bei der PCR-Analyse: {e}"
-        print(message)
-        asyncio.run(send_telegram_message(message))
-        return
+        errors.append(f"FEHLER bei der PCR-Analyse: {e}")
 
     # Schritt 2: QQQ Momentum prüfen
-    last_roc = None
     try:
         qqq = yf.Ticker("QQQ")
         hist = qqq.history(period="6mo", auto_adjust=True)
         if hist.empty:
-            message = "FEHLER: Keine historischen Daten für QQQ gefunden."
-            print(message)
-            asyncio.run(send_telegram_message(message))
-            return
-
-        roc_60 = ROCIndicator(close=hist['Close'], window=60).roc()
-        last_roc = roc_60.iloc[-1]
+            errors.append("Keine historischen Daten für QQQ von yfinance gefunden.")
+        else:
+            roc_60 = ROCIndicator(close=hist['Close'], window=60).roc()
+            last_roc = roc_60.iloc[-1]
 
     except Exception as e:
-        message = f"FEHLER bei der QQQ-Momentum-Prüfung: {e}"
-        print(message)
-        asyncio.run(send_telegram_message(message))
-        return
+        errors.append(f"FEHLER bei der QQQ-Momentum-Prüfung (yfinance): {e}")
 
-    # --- Ausgabe der gesammelten Daten ---
-    if percentage_diff is not None and last_roc is not None:
+    # Schritt 3: Finale Nachricht basierend auf Erfolg oder Fehlern erstellen
+    final_message = ""
+    if errors:
+        # Fehlermodus: Alle gesammelten Fehler auflisten
+        error_header = "Das Skript wurde mit Fehlern ausgeführt:"
+        error_messages = "\n- ".join(errors)
+        final_message = f"{error_header}\n- {error_messages}"
+    elif percentage_diff is not None and last_roc is not None:
+        # Erfolgsmodus: Signale generieren
         message_lines.append(f"PCR Signal: {percentage_diff:+.2f}%")
         message_lines.append(
             f"Last PCR: {last_pcr_value} ({last_pcr_date}); {prev_pcr_value} ({prev_pcr_date})")
         message_lines.append(f"QQQ ROC(60) = {last_roc:.2f}%")
-    else:
-        message = "Konnte nicht alle notwendigen Daten für eine Entscheidung sammeln."
-        print(message)
-        asyncio.run(send_telegram_message(message))
-        return
+        message_lines.append("-" * 20)
 
-    # Schritt 3: Signale basierend auf den kombinierten Bedingungen generieren
-    if percentage_diff > 7 and last_roc > 0:
-        message_lines.append("-" * 20)
-        message_lines.append("Signal: BUY LONG POSITION ON OPEN")
-    elif percentage_diff < -4:
-        message_lines.append("-" * 20)
-        message_lines.append("Signal: CLOSE LONG POSITION ON OPEN")
+        if percentage_diff > 7 and last_roc > 0:
+            message_lines.append("Signal: BUY LONG POSITION ON OPEN")
+        elif percentage_diff < -4:
+            message_lines.append("Signal: CLOSE LONG POSITION ON OPEN")
+        else:
+            message_lines.append("Signal: HOLD / FLAT")
+        
+        final_message = "\n".join(message_lines)
     else:
-        message_lines.append("-" * 20)
-        message_lines.append("Signal: HOLD / FLAT")
+        # Dieser Fall sollte nicht eintreten, wenn die Logik korrekt ist
+        final_message = "Unbekannter Zustand: Weder Erfolgsdaten noch Fehler wurden aufgezeichnet. Das Skript wurde ausgeführt."
 
-    # Finale Nachricht zusammenstellen und senden
-    message = "\n".join(message_lines)
-    print(message)
-    asyncio.run(send_telegram_message(message))
+    # Schritt 4: Finale Nachricht senden
+    print(final_message)
+    asyncio.run(send_telegram_message(final_message))
 
 
 # --- Hauptlogik ---
