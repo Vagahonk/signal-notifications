@@ -1,4 +1,4 @@
-name: Turnaround Tuesday Scanner
+name: No Panic Model Scanner
 
 on:
     schedule:
