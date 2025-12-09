@@ -34,6 +34,7 @@ def check_qqq_vix_strategy():
         message = (
             f"✅ NPM Signal erkannt!\n"
             f"- VIX ({last_vix_close:.2f}) > 30"
+            f"Profit Target: 6%, Time Stop +9days"
         )
     else:
         message = (
