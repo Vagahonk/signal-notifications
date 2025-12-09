@@ -1,3 +1,5 @@
 yfinance
 ta
 python-telegram-bot
+requests
+pandas
