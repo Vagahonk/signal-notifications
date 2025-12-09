@@ -124,10 +124,10 @@ def perform_strategy_check():
     # Schritt 3: Signale basierend auf den kombinierten Bedingungen generieren
     if percentage_diff > 7 and last_roc > 0:
         message_lines.append("-" * 20)
-        message_lines.append("Signal: BUY ON OPEN")
+        message_lines.append("Signal: BUY LONG POSITION ON OPEN")
     elif percentage_diff < -4:
         message_lines.append("-" * 20)
-        message_lines.append("Signal: SELL ON OPEN")
+        message_lines.append("Signal: CLOSE LONG POSITION ON OPEN")
     else:
         message_lines.append("-" * 20)
         message_lines.append("Signal: HOLD / FLAT")
