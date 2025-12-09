@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 import asyncio
 from telegram import Bot
 
+print("TOKEN:", os.getenv("TELEGRAM_BOT_TOKEN"))
+print("CHAT_ID:", os.getenv("TELEGRAM_CHAT_ID"))
+
 # --- Configuration ---
 # TOKEN = "8206293301:AAF6bg9TfesbodsfpFC6Z4Ce5sOhLCgyBPU"
 # CHAT_ID = "1460988872"
