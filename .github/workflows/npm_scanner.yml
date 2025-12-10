@@ -2,7 +2,7 @@ name: No Panic Model Scanner
 
 on:
     schedule:
-        - cron: "30 20 * * *" # täglich 20:30 UTC (~21:30 MEZ)
+        - cron: "0 20 * * *" # täglich 20:00 UTC (~21:00 MEZ)
     workflow_dispatch: # erlaubt manuelles Starten
 
 jobs:

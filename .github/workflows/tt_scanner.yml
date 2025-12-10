@@ -2,7 +2,7 @@ name: Turnaround Tuesday Scanner
 
 on:
     schedule:
-        - cron: "30 20 * * 1" # Montag 20:30 UTC (~21:30 MEZ)
+        - cron: "0 20 * * 1" # Montag 20:00 UTC (~21:00 MEZ)
     workflow_dispatch: # erlaubt manuelles Starten
 
 jobs:
