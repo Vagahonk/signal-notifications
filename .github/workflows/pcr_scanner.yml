@@ -2,7 +2,7 @@ name: Put/Call Ratio Scanner
 
 on:
     schedule:
-        - cron: "30 12 * * *" # täglich 12:30 UTC (~13:30 MEZ)
+        - cron: "0 10 * * *" # täglich 10:00 UTC (~11:00 MEZ)
     workflow_dispatch: # erlaubt manuelles Starten
 
 jobs:
