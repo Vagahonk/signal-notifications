@@ -51,7 +51,8 @@ def perform_strategy_check():
         pcr_df['Date'] = pcr_df['Date'].astype(str)
 
         if len(pcr_df) < 200:
-            errors.append(f"Nicht genügend Daten von der URL für SMA(200). Benötigt: 200, Vorhanden: {len(pcr_df)}.")
+            errors.append(
+                f"Nicht genügend Daten von der URL für SMA(200). Benötigt: 200, Vorhanden: {len(pcr_df)}.")
         else:
             pcr_df['SMA2'] = pcr_df['Value'].rolling(window=2).mean()
             pcr_df['SMA200'] = pcr_df['Value'].rolling(window=200).mean()
@@ -59,7 +60,8 @@ def perform_strategy_check():
             last_sma200 = pcr_df['SMA200'].iloc[-1]
 
             if last_sma200 == 0:
-                errors.append("SMA200 ist Null, eine Division ist nicht möglich.")
+                errors.append(
+                    "SMA200 ist Null, eine Division ist nicht möglich.")
             else:
                 ratio = last_sma2 / last_sma200
                 percentage_diff = (ratio - 1) * 100
@@ -84,7 +86,8 @@ def perform_strategy_check():
         qqq = yf.Ticker("QQQ")
         hist = qqq.history(period="6mo", auto_adjust=True)
         if hist.empty:
-            errors.append("Keine historischen Daten für QQQ von yfinance gefunden.")
+            errors.append(
+                "Keine historischen Daten für QQQ von yfinance gefunden.")
         else:
             roc_60 = ROCIndicator(close=hist['Close'], window=60).roc()
             last_roc = roc_60.iloc[-1]
@@ -101,19 +104,19 @@ def perform_strategy_check():
         final_message = f"{error_header}\n- {error_messages}"
     elif percentage_diff is not None and last_roc is not None:
         # Erfolgsmodus: Signale generieren
-        message_lines.append(f"PCR Signal: {percentage_diff:+.2f}%")
+        if percentage_diff < -4:
+            message_lines.append("❌ Signal: CLOSE LONG POSITION ON OPEN")
+        elif percentage_diff > 7 and last_roc > 0:
+            message_lines.append("✅ Signal: BUY LONG POSITION ON OPEN")
+        else:
+            message_lines.append("❌ Signal: HOLD / FLAT")
+
+        message_lines.append("-" * 20)
         message_lines.append(
             f"Last PCR: {last_pcr_value} ({last_pcr_date}); {prev_pcr_value} ({prev_pcr_date})")
         message_lines.append(f"QQQ ROC(60) = {last_roc:.2f}%")
-        message_lines.append("-" * 20)
+        message_lines.append(f"PCR Value: {percentage_diff:+.2f}%")
 
-        if percentage_diff > 7 and last_roc > 0:
-            message_lines.append("Signal: BUY LONG POSITION ON OPEN")
-        elif percentage_diff < -4:
-            message_lines.append("Signal: CLOSE LONG POSITION ON OPEN")
-        else:
-            message_lines.append("Signal: HOLD / FLAT")
-        
         final_message = "\n".join(message_lines)
     else:
         # Dieser Fall sollte nicht eintreten, wenn die Logik korrekt ist
