@@ -7,7 +7,12 @@ from telegram import Bot
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-print("TELEGRAM_CHAT_ID =", CHAT_ID)
+"""import requests
+
+
+url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
+
+print(requests.get(url).json())"""
 
 
 async def send_telegram_message(text):
