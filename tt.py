@@ -6,7 +6,8 @@ from telegram import Bot
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-"""ID Guppe: -5203280402"""
+
+print("TELEGRAM_CHAT_ID =", CHAT_ID)
 
 
 async def send_telegram_message(text):
