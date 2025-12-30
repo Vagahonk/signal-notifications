@@ -6,6 +6,7 @@ from telegram import Bot
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+"""ID Guppe: -5203280402"""
 
 
 async def send_telegram_message(text):
@@ -37,7 +38,8 @@ def check_spy_monday_strategy():
         hist = spy.history(period="10d")
 
         if hist.empty or len(hist) < 3:
-            errors.append("Nicht genügend historische Daten für SPY von yfinance gefunden.")
+            errors.append(
+                "Nicht genügend historische Daten für SPY von yfinance gefunden.")
         else:
             last_day = hist.index[-1]
             if last_day.weekday() != 0:  # 0 ist Montag
@@ -50,8 +52,10 @@ def check_spy_monday_strategy():
                 rsi_indicator = RSIIndicator(close=hist["Close"], window=2)
                 rsi_value = rsi_indicator.rsi().iloc[-1]
 
-                print(f"Montag Schlusskurs ({last_day.date()}): {monday_close:.2f}")
-                print(f"Freitag Schlusskurs ({friday_date.date()}): {friday_close:.2f}")
+                print(
+                    f"Montag Schlusskurs ({last_day.date()}): {monday_close:.2f}")
+                print(
+                    f"Freitag Schlusskurs ({friday_date.date()}): {friday_close:.2f}")
                 print(f"RSI(2): {rsi_value:.2f}")
 
                 condition1 = monday_close < friday_close
@@ -69,8 +73,10 @@ def check_spy_monday_strategy():
                         reasons.append(
                             f"Montagsschluss ({monday_close:.2f}) nicht niedriger als Freitagsschluss ({friday_close:.2f})")
                     if not condition2:
-                        reasons.append(f"RSI(2) ({rsi_value:.2f}) nicht unter 35")
-                    message = "❌ Kein Turnaround Tuesday Signal:\n- " + "\n- ".join(reasons)
+                        reasons.append(
+                            f"RSI(2) ({rsi_value:.2f}) nicht unter 35")
+                    message = "❌ Kein Turnaround Tuesday Signal:\n- " + \
+                        "\n- ".join(reasons)
 
     except Exception as e:
         errors.append(f"FEHLER bei der Strategieprüfung (yfinance): {e}")
