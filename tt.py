@@ -1,3 +1,4 @@
+import requests
 import os
 import yfinance as yf
 from ta.momentum import RSIIndicator
@@ -7,10 +8,8 @@ from telegram import Bot
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-"""import requests
 
-
-url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
+"""url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
 
 print(requests.get(url).json())"""
 
