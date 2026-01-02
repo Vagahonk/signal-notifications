@@ -68,7 +68,7 @@ def check_spy_monday_strategy():
 
                 if condition1 and condition2:
                     message = (
-                        "✅ Turnaround Tuesday Signal erkannt!\n"
+                        "✅ 'LTT' Signal: BUY SPY ON CLOSE, PT 1%\n"
                         f"- Montags Schlusskurs ({monday_close:.2f}) < Freitags Schlusskurs ({friday_close:.2f})\n"
                         f"- RSI(2) ({rsi_value:.2f}) < 35"
                     )
@@ -80,7 +80,7 @@ def check_spy_monday_strategy():
                     if not condition2:
                         reasons.append(
                             f"RSI(2) ({rsi_value:.2f}) nicht unter 35")
-                    message = "❌ Kein Turnaround Tuesday Signal:\n- " + \
+                    message = "❌ Kein 'LTT' Signal:\n- " + \
                         "\n- ".join(reasons)
 
     except Exception as e:

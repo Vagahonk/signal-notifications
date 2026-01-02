@@ -34,25 +34,27 @@ def check_qqq_vix_strategy():
         hist = vix.history(period="10d")
 
         if hist.empty:
-            errors.append("Keine historischen Daten für ^VIX von yfinance gefunden.")
+            errors.append(
+                "Keine historischen Daten für ^VIX von yfinance gefunden.")
         else:
             last_vix_close = hist['Close'].iloc[-1]
             condition = last_vix_close > 30
 
             if condition:
                 message = (
-                    f"✅ 'No Panic Model' Signal!\n"
+                    f"✅ 'LNPM' Signal: BUY QQQ ON CLOSE, PT 6%\n"
                     f"- VIX ({last_vix_close:.2f}) > 30\n"
-                    f"Profit Target: 6%, Time Stop +9days"
+                    f"Time Stop +9days"
                 )
             else:
                 message = (
-                    f"❌ Kein 'No Panic Model' Signal:\n"
+                    f"❌ Kein 'LNPM' Signal:\n"
                     f"- VIX ({last_vix_close:.2f}) nicht über 30"
                 )
 
     except Exception as e:
-        errors.append(f"FEHLER bei der 'No Panic Model' Strategieprüfung (yfinance): {e}")
+        errors.append(
+            f"FEHLER bei der 'No Panic Model' Strategieprüfung (yfinance): {e}")
 
     # Finale Nachricht erstellen und senden
     final_message = ""
@@ -64,7 +66,7 @@ def check_qqq_vix_strategy():
         final_message = message
     else:
         final_message = "Unbekannter Zustand in 'npm.py': Weder Erfolgs- noch Fehlermeldung generiert."
-    
+
     print(final_message)
     asyncio.run(send_telegram_message(final_message))
 

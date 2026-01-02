@@ -105,11 +105,12 @@ def perform_strategy_check():
     elif percentage_diff is not None and last_roc is not None:
         # Erfolgsmodus: Signale generieren
         if percentage_diff < -4:
-            message_lines.append("❌ Signal: CLOSE LONG POSITION ON OPEN")
+            message_lines.append(
+                "❌ 'LPCR' Signal: CLOSE LONG POSITION ON OPEN")
         elif percentage_diff > 7 and last_roc > 0:
-            message_lines.append("✅ Signal: BUY LONG POSITION ON OPEN")
+            message_lines.append("✅ 'LPCR' Signal: BUY ON OPEN")
         else:
-            message_lines.append("❌ Signal: HOLD / FLAT")
+            message_lines.append("❌ 'LPCR' Signal: HOLD / FLAT")
 
         message_lines.append("-" * 20)
         message_lines.append(
