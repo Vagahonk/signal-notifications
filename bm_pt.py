@@ -95,22 +95,22 @@ def get_closing_price_and_pt(symbol, pt_percentage=0.03):
 
 async def main():
     # Run the Bond Momentum strategy
-    is_buy_signal, above_sma_count, total_symbols, bm_strategy_errors = run_bm_strategy(
-        BM_SYMBOLS)
+    is_buy_signal, above_sma_count, total_symbols, bm_strategy_errors = run_bm_strategy(BM_SYMBOLS)
 
-    telegram_output_lines = []
-
-    if bm_strategy_errors:
-        error_header = "Das Skript 'bm_pt.py' hat Fehler in der Strategieausführung:"
-        error_messages = "\n- ".join(bm_strategy_errors)
-        telegram_output_lines.append(f"{error_header}\n- {error_messages}")
-
+    # Only proceed to prepare and send a message if there is a BUY signal
     if is_buy_signal:
+        telegram_output_lines = []
+
+        # If there were errors during strategy execution, include them in the message
+        if bm_strategy_errors:
+            error_header = "Das Skript 'bm_pt.py' hat Fehler in der Strategieausführung (trotz Kaufsignal):"
+            error_messages = "\n- ".join(bm_strategy_errors)
+            telegram_output_lines.append(f"{error_header}\n- {error_messages}\n")
+        
         # As per bm.py's logic, if a buy signal is generated, these are the target symbols
         target_symbols_for_pt = ["CWB", "HYD", "BAB"]
-
-        telegram_output_lines.append("📈 **'LBM' Profit Target Calculation** 📈")
-
+        
+        telegram_output_lines.append("📈 **Profit Target Calculation** 📈")
         telegram_output_lines.append("")
 
         for symbol in target_symbols_for_pt:
@@ -121,21 +121,18 @@ async def main():
             else:
                 telegram_output_lines.append(
                     f"**{symbol}**: Konnte keine Daten abrufen oder PT berechnen.")
+        
+        # Send the message since a BUY signal was present
+        final_telegram_message = "\n".join(telegram_output_lines)
+        print("\n--- Telegram Message Content ---")
+        print(final_telegram_message)
+        print("----------------------------\n")
+        await send_telegram_message(final_telegram_message)
     else:
-        telegram_output_lines.append("❌ Kein 'LBM' Kaufsignal gefunden.")
-        telegram_output_lines.append(
-            f"(Bedingung: {above_sma_count} von {total_symbols} ETFs über SMA(100) nicht erfüllt.)")
-
-    final_telegram_message = "\n".join(telegram_output_lines)
-    print("\n--- Telegram Message Content ---")
-    print(final_telegram_message)
-    print("----------------------------\n")
-    await send_telegram_message(final_telegram_message)
+        # No BUY signal, and user requested to be silent, so do nothing and print a console message.
+        print("Kein Kaufsignal. Keine Nachricht gesendet.")
 
 if __name__ == "__main__":
     # Optional: Add a check for Friday, similar to bm.py, if bm_pt.py should also only run on Fridays.
     # For now, it will run whenever executed.
-    asyncio.run(main())
-
-if __name__ == "__main__":
     asyncio.run(main())
