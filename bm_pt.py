@@ -95,7 +95,8 @@ def get_closing_price_and_pt(symbol, pt_percentage=0.03):
 
 async def main():
     # Run the Bond Momentum strategy
-    is_buy_signal, above_sma_count, total_symbols, bm_strategy_errors = run_bm_strategy(BM_SYMBOLS)
+    is_buy_signal, above_sma_count, total_symbols, bm_strategy_errors = run_bm_strategy(
+        BM_SYMBOLS)
 
     # Only proceed to prepare and send a message if there is a BUY signal
     if is_buy_signal:
@@ -105,23 +106,24 @@ async def main():
         if bm_strategy_errors:
             error_header = "Das Skript 'bm_pt.py' hat Fehler in der Strategieausführung (trotz Kaufsignal):"
             error_messages = "\n- ".join(bm_strategy_errors)
-            telegram_output_lines.append(f"{error_header}\n- {error_messages}\n")
-        
+            telegram_output_lines.append(
+                f"{error_header}\n- {error_messages}\n")
+
         # As per bm.py's logic, if a buy signal is generated, these are the target symbols
         target_symbols_for_pt = ["CWB", "HYD", "BAB"]
-        
-        telegram_output_lines.append("📈 **Profit Target Calculation** 📈")
+
+        telegram_output_lines.append("📈 **'LBM' Profit Target Calculation**")
         telegram_output_lines.append("")
 
         for symbol in target_symbols_for_pt:
             close_price, pt_price = get_closing_price_and_pt(symbol)
             if close_price is not None and pt_price is not None:
                 telegram_output_lines.append(
-                    f"**{symbol}**: Last Close: {close_price:.2f}, PT (+3%): {pt_price:.2f}")
+                    f"**{symbol}**: Close: {close_price:.2f}, PT 3%: {pt_price:.2f}")
             else:
                 telegram_output_lines.append(
                     f"**{symbol}**: Konnte keine Daten abrufen oder PT berechnen.")
-        
+
         # Send the message since a BUY signal was present
         final_telegram_message = "\n".join(telegram_output_lines)
         print("\n--- Telegram Message Content ---")
