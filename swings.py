@@ -8,7 +8,7 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
-from ta.momentum import RSIIndicator
+from ta.momentum import RSIIndicator, ROCIndicator
 from ta.trend import ADXIndicator
 import os
 import asyncio
@@ -114,6 +114,7 @@ def run_analysis(tickers):
 
     print("Daten-Download abgeschlossen. Starte Analyse...", file=sys.stderr)
     signal_count = 0
+    signal_tickers = [] # Initialize a list to store tickers with signals
 
     for i, ticker in enumerate(tickers):
         print(
@@ -145,36 +146,36 @@ def run_analysis(tickers):
             stock_data.columns = stock_data.columns.droplevel(1)
             stock_data = stock_data.dropna()
 
-            if len(stock_data) < 20:  # Need enough data for ADX
+            if len(stock_data) < 250:  # Need enough data for ROC(250)
                 continue
 
             rsi_series = RSIIndicator(
                 close=stock_data['Close'], window=2).rsi()
             adx_series = ADXIndicator(
                 high=stock_data['High'], low=stock_data['Low'], close=stock_data['Close'], window=14).adx()
+            roc_series = ROCIndicator(
+                close=stock_data['Close'], window=250).roc()
 
-            if rsi_series.empty or adx_series.empty:
+            if rsi_series.empty or adx_series.empty or roc_series.empty:
                 continue
 
             latest_rsi = rsi_series.iloc[-1]
             latest_adx = adx_series.iloc[-1]
+            latest_roc_250 = roc_series.iloc[-1]
 
-            if np.isnan(latest_rsi) or np.isnan(latest_adx):
+            if np.isnan(latest_rsi) or np.isnan(latest_adx) or np.isnan(latest_roc_250):
                 continue
 
             # --- Final Signal Condition Check ---
-            if latest_rsi < 10 and latest_adx > 20:
+            if latest_rsi < 10 and latest_adx > 20 and latest_roc_250 > 0:
                 signal_count += 1
-                signal_message = (
-                    f"--- SWING SIGNAL ---\n"
-                    f"Ticker: {ticker}\n"
-                    f"  R2: {r2_score:.2f}\n"
-                    f"  ADX: {latest_adx:.2f}\n"
-                    f"  RSI(2): {latest_rsi:.2f}\n"
-                    f"----------------------"
-                )
-                print(signal_message)
-                asyncio.run(send_telegram_message(signal_message))
+                signal_tickers.append(ticker) # Add ticker to the list
+                print(f"--- SIGNAL FOUND for {ticker} ---", file=sys.stderr)
+                print(f"  R2: {r2_score:.2f}", file=sys.stderr)
+                print(f"  ADX: {latest_adx:.2f}", file=sys.stderr)
+                print(f"  RSI(2): {latest_rsi:.2f}", file=sys.stderr)
+                print(f"  ROC(250): {latest_roc_250:.2f}", file=sys.stderr)
+                print(f"----------------------", file=sys.stderr)
 
         except KeyError:
             # This can happen if a ticker download fails among many
@@ -187,6 +188,14 @@ def run_analysis(tickers):
 
     print(
         f"\nAnalyse abgeschlossen. {signal_count} Signale gefunden.", file=sys.stderr)
+
+    # Send one consolidated Telegram message at the end
+    if signal_tickers:
+        final_telegram_message = "Swing Trade Signale: " + ", ".join(signal_tickers)
+        asyncio.run(send_telegram_message(final_telegram_message))
+    else:
+        print("Keine Swing Trade Signale gefunden. Keine Telegram-Nachricht gesendet.", file=sys.stderr)
+
 
 
 if __name__ == "__main__":
