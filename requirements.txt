@@ -3,3 +3,6 @@ ta
 python-telegram-bot
 requests
 pandas
+beautifulsoup4
+numpy
+scikit-learn

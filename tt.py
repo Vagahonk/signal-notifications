@@ -27,10 +27,9 @@ async def send_telegram_message(text):
         print(f"Failed to send Telegram notification: {e}")
 
 
-def check_spy_monday_strategy():
+def check_tt_strategy():
     """
-    Prüft die "Turnaround Tuesday" Strategie für SPY, sammelt Fehler und sendet
-    eine einzelne, zusammenfassende Benachrichtigung.
+    Prüft die "Turnaround Tuesday" Strategie für SPY und sendet Benachrichtigung.
     Bedingungen:
     1. Montags Schlusskurs < Freitags Schlusskurs
     2. RSI(2) < 35
@@ -102,4 +101,4 @@ def check_spy_monday_strategy():
 
 
 if __name__ == "__main__":
-    check_spy_monday_strategy()
+    check_tt_strategy()
