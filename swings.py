@@ -10,6 +10,25 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from ta.momentum import RSIIndicator
 from ta.trend import ADXIndicator
+import os
+import asyncio
+from telegram import Bot
+
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("SWING_CHAT_ID")
+
+
+async def send_telegram_message(text):
+    """Sends a message to a Telegram chat."""
+    if not TOKEN or not CHAT_ID:
+        print("Telegram environment variables (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) not set. Skipping notification.")
+        return
+    try:
+        bot = Bot(token=TOKEN)
+        await bot.send_message(chat_id=CHAT_ID, text=text)
+        print("Telegram notification sent successfully.")
+    except Exception as e:
+        print(f"Failed to send Telegram notification: {e}")
 
 # Suppress pandas warnings
 warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
@@ -117,8 +136,8 @@ def run_analysis(tickers):
             # Normalize R2 score to be between 0 and 100
             r2_score = best_r2 * 100
 
-            # --- Signal Condition Check (R2 > 90) ---
-            if r2_score <= 90:
+            # --- Signal Condition Check (R2 > 85) ---
+            if r2_score <= 85:
                 continue
 
             # --- Indicator Calculation (ADX & RSI) ---
@@ -146,12 +165,16 @@ def run_analysis(tickers):
             # --- Final Signal Condition Check ---
             if latest_rsi < 10 and latest_adx > 20:
                 signal_count += 1
-                print(f"--- SIGNAL ---")
-                print(f"Ticker: {ticker}")
-                print(f"  R2: {r2_score:.2f}")
-                print(f"  ADX: {latest_adx:.2f}")
-                print(f"  RSI(2): {latest_rsi:.2f}")
-                print(f"--------------")
+                signal_message = (
+                    f"--- SWING SIGNAL ---\n"
+                    f"Ticker: {ticker}\n"
+                    f"  R2: {r2_score:.2f}\n"
+                    f"  ADX: {latest_adx:.2f}\n"
+                    f"  RSI(2): {latest_rsi:.2f}\n"
+                    f"----------------------"
+                )
+                print(signal_message)
+                asyncio.run(send_telegram_message(signal_message))
 
         except KeyError:
             # This can happen if a ticker download fails among many
