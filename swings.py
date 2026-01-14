@@ -191,7 +191,7 @@ def run_analysis(tickers):
 
     # Send one consolidated Telegram message at the end
     if signal_tickers:
-        final_telegram_message = "Swing Trade Signale: " + ", ".join(signal_tickers)
+        final_telegram_message = ", ".join(signal_tickers)
         asyncio.run(send_telegram_message(final_telegram_message))
     else:
         print("Keine Swing Trade Signale gefunden. Keine Telegram-Nachricht gesendet.", file=sys.stderr)

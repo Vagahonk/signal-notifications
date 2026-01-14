@@ -2,6 +2,7 @@ name: Swing Trading Scanner
 
 on:
     schedule:
+        - cron: "30 17 * * 1-5"
         - cron: "0 20 * * 1-5" # täglich 20:00 UTC (~21:00 MEZ)
     workflow_dispatch: # erlaubt manuelles Starten
 
